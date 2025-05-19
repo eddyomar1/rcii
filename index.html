@@ -1,185 +1,147 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Actividad Diaria de RCII</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+  <title>Actividad Diaria de RCII</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4" style="background-color: aqua;">
-    <div class="bg-white p-4 sm:p-6 rounded-lg shadow-lg w-full max-w-md">
-        <h1 class="text-xl sm:text-2xl font-bold text-center mb-4">Actividad Diaria de RCII</h1>
-        <div class="mb-4">
-            <input id="userId" type="text" placeholder="ID de usuario" class="w-full p-2 border rounded text-sm sm:text-base" />
-            <button id="checkInBtn" class="w-full bg-blue-500 text-white py-2 rounded mt-2 hover:bg-blue-600 text-sm sm:text-base">Registrar Entrada</button>
-            <button id="checkOutBtn" class="w-full bg-red-500 text-white py-2 rounded mt-2 hover:bg-red-600 text-sm sm:text-base">Registrar Salida</button>
-        </div>
-        <div class="mb-4">
-            <select id="activitySelect" class="w-full p-2 border rounded text-sm sm:text-base">
-                <option value="">Selecciona una actividad</option>
-                <option value="Edificio 1">Limpiar Edificio 1</option>
-                <option value="Edificio 2">Limpiar Edificio 2</option>
-                <option value="Edificio 3">Limpiar Edificio 3</option>
-                <option value="Edificio 4">Limpiar Edificio 4</option>
-                <option value="Edificio 5">Limpiar Edificio 5</option>
-                <option value="Edificio 6">Limpiar Edificio 6</option>
-                <option value="Edificio 7">Limpiar Edificio 7</option>
-                <option value="Edificio 8">Limpiar Edificio 8</option>
-                <option value="Edificio 9">Limpiar Edificio 9</option>
-                <option value="Edificio 10">Limpiar Edificio 10</option>
-                <option value="Edificio 11">Limpiar Edificio 11</option>
-                <option value="Edificio 12">Limpiar Edificio 12</option>
-                <option value="Edificio 13">Limpiar Edificio 13</option>
-                <option value="Edificio 14">Limpiar Edificio 14</option>
-                <option value="Edificio 15">Limpiar Edificio 15</option>
-                <option value="Edificio 16">Limpiar Edificio 16</option>
-                <option value="Edificio 17">Limpiar Edificio 17</option>
-                <option value="Edificio 18">Limpiar Edificio 18</option>
-                <option value="Edificio 19">Limpiar Edificio 19</option>
-                <option value="Edificio 20">Limpiar Edificio 20</option>
-                <option value="Podar Jardín">Podar Jardín</option>
-                <option value="Sacar Maleza">Sacar Maleza</option>
-                <option value="Podar Árboles">Podar Árboles</option>
-            </select>
-            <button id="addActivityBtn" class="w-full bg-green-500 text-white py-2 rounded mt-2 hover:bg-green-600 text-sm sm:text-base">Registrar Actividad</button>
-        </div>
-        <div class="mb-4">
-            <label for="dateFilter" class="block text-sm font-medium text-gray-700">Filtrar por fecha:</label>
-            <input id="dateFilter" type="date" class="w-full p-2 border rounded mt-1 text-sm sm:text-base" />
-            <button id="filterBtn" class="w-full bg-purple-500 text-white py-2 rounded mt-2 hover:bg-purple-600 text-sm sm:text-base">Filtrar por Fecha</button>
-            <button id="clearFilterBtn" class="w-full bg-gray-500 text-white py-2 rounded mt-2 hover:bg-gray-600 text-sm sm:text-base">Mostrar Todas</button>
-        </div>
-        <div>
-            <h2 class="text-base sm:text-lg font-semibold mb-2">Historial</h2>
-            <ul id="activityLog" class="border p-4 rounded max-h-64 overflow-y-auto text-sm sm:text-base"></ul>
-        </div>
+<body class="bg-aqua flex items-center justify-center min-h-screen p-4">
+  <div class="bg-white p-4 sm:p-6 rounded-lg shadow-lg w-full max-w-md">
+    <h1 class="text-2xl font-bold text-center mb-4">Actividad Diaria de RCII</h1>
+
+    <!-- Usuario + Checkin/Checkout -->
+    <div class="mb-4">
+      <input id="userId" type="text" placeholder="ID de usuario"
+             class="w-full p-2 border rounded mb-2" />
+      <button id="checkInBtn"
+              class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded mb-2">
+        Registrar Entrada
+      </button>
+      <button id="checkOutBtn"
+              class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded">
+        Registrar Salida
+      </button>
     </div>
 
-    <script>
-        const checkInBtn = document.getElementById('checkInBtn');
-        const checkOutBtn = document.getElementById('checkOutBtn');
-        const activitySelect = document.getElementById('activitySelect');
-        const addActivityBtn = document.getElementById('addActivityBtn');
-        const activityLog = document.getElementById('activityLog');
-        const userIdInput = document.getElementById('userId');
-        const dateFilter = document.getElementById('dateFilter');
-        const filterBtn = document.getElementById('filterBtn');
-        const clearFilterBtn = document.getElementById('clearFilterBtn');
+    <!-- Lista de Actividades + Trabajo Realizado -->
+    <div class="mb-4">
+      <select id="activitySelect"
+              class="w-full p-2 border rounded mb-2">
+        <option value="">Selecciona una actividad</option>
+        <!-- ...tus opciones... -->
+      </select>
+      <textarea id="trabajoRealizado"
+                placeholder="Describe el trabajo realizado…"
+                class="w-full p-2 border rounded mb-2"
+                rows="2"></textarea>
+      <button id="addActivityBtn"
+              class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded">
+        Registrar Actividad
+      </button>
+    </div>
 
-        async function fetchActivities(date = '') {
-            const url = date ? `api.php?action=get&date=${date}` : 'api.php?action=get';
-            try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error('Network response was not ok');
-                const activities = await response.json();
-                activityLog.innerHTML = '';
-                if (activities.length === 0) {
-                    const li = document.createElement('li');
-                    li.className = 'py-1 text-gray-500';
-                    li.textContent = 'No hay actividades para esta fecha.';
-                    activityLog.appendChild(li);
-                } else {
-                    activities.forEach(activity => {
-                        const li = document.createElement('li');
-                        li.className = 'py-1';
-                        li.textContent = `${activity.formatted_timestamp} - ${activity.activity_type} (Usuario: ${activity.user_id})`;
-                        activityLog.appendChild(li);
-                    });
-                }
-            } catch (error) {
-                console.error('Fetch error:', error);
-                alert('Error al cargar actividades.');
-            }
-        }
+    <!-- Filtro por Fecha -->
+    <div class="mb-4">
+      <label for="dateFilter" class="block mb-1">Filtrar por fecha:</label>
+      <input id="dateFilter" type="date"
+             class="w-full p-2 border rounded mb-2" />
+      <button id="filterBtn"
+              class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 rounded mb-2">
+        Filtrar por Fecha
+      </button>
+      <button id="clearFilterBtn"
+              class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 rounded">
+        Mostrar Todas
+      </button>
+    </div>
 
-        async function logActivity(activityType) {
-            const userId = userIdInput.value.trim();
-            if (!userId) {
-                alert('Por favor, ingresa un ID de usuario.');
-                return;
-            }
-            try {
-                const response = await fetch('api.php?action=add', {
-                    method: 'POST',
-                    // method: 'GET',
-                    
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: userId, activity_type: activityType })
-                });
-                if (!response.ok) throw new Error('Network response was not ok');
-                fetchActivities(dateFilter.value);
-            } catch (error) {
-                console.error('Log error:', error);
-                alert('Error al registrar la actividad.');
-            }
-        }
+    <!-- Historial -->
+    <h2 class="text-lg font-semibold mb-2">Historial</h2>
+    <ul id="activityLog"
+        class="border p-4 rounded max-h-64 overflow-y-auto text-sm"></ul>
+  </div>
 
-        checkInBtn.addEventListener('click', () => logActivity('Entrada'));
-        checkOutBtn.addEventListener('click', () => logActivity('Salida'));
-        addActivityBtn.addEventListener('click', () => {
-            const selectedActivity = activitySelect.value;
-            if (selectedActivity) {
-                logActivity(selectedActivity);
-                activitySelect.value = '';
-            } else {
-                alert('Por favor, selecciona una actividad.');
-            }
+  <script>
+    // Referencias DOM
+    const userIdInput      = document.getElementById('userId');
+    const checkInBtn       = document.getElementById('checkInBtn');
+    const checkOutBtn      = document.getElementById('checkOutBtn');
+    const activitySelect   = document.getElementById('activitySelect');
+    const trabajoTextarea  = document.getElementById('trabajoRealizado');
+    const addActivityBtn   = document.getElementById('addActivityBtn');
+    const dateFilter       = document.getElementById('dateFilter');
+    const filterBtn        = document.getElementById('filterBtn');
+    const clearFilterBtn   = document.getElementById('clearFilterBtn');
+    const activityLog      = document.getElementById('activityLog');
+
+    // Carga inicial
+    fetchActivities();
+
+    // Fetch de actividades
+    async function fetchActivities(fecha = '') {
+      const url = fecha
+        ? `api.php?action=get&date=${encodeURIComponent(fecha)}`
+        : `api.php?action=get`;
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(res.statusText);
+        const actividades = await res.json();
+        activityLog.innerHTML = actividades.length
+          ? actividades.map(a => `
+              <li class="py-1">
+                ${a.formatted_timestamp} — ${a.activity_type}
+                ${a.trabajo_realizado ? `: ${a.trabajo_realizado}` : ''}
+                <span class="text-gray-500"> (Usuario: ${a.user_id})</span>
+              </li>
+            `).join('')
+          : `<li class="py-1 text-gray-500">No hay actividades.</li>`;
+      } catch (e) {
+        console.error(e);
+        alert('Error al cargar actividades');
+      }
+    }
+
+    // Loguear actividades (entrada, salida o personalizada)
+    async function logActivity(activityType) {
+      const user_id           = userIdInput.value.trim();
+      const trabajo_realizado = trabajoTextarea.value.trim();
+      if (!user_id) {
+        return alert('Por favor, ingresa un ID de usuario.');
+      }
+      const payload = { user_id, activity_type: activityType, trabajo_realizado };
+      try {
+        const res = await fetch('api.php?action=add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
         });
+        if (!res.ok) throw new Error(res.statusText);
+        trabajoTextarea.value = '';         // limpiamos textarea
+        fetchActivities(dateFilter.value);  // recargamos historial
+      } catch (e) {
+        console.error(e);
+        alert('Error al registrar la actividad');
+      }
+    }
 
-        filterBtn.addEventListener('click', () => {
-            const selectedDate = dateFilter.value;
-            if (selectedDate) {
-                fetchActivities(selectedDate);
-            } else {
-                alert('Por favor, selecciona una fecha.');
-            }
-        });
-
-        clearFilterBtn.addEventListener('click', () => {
-            dateFilter.value = '';
-            fetchActivities();
-        });
-
-        fetchActivities();
-    </script>
+    // Eventos
+    checkInBtn.addEventListener('click', () => logActivity('Entrada'));
+    checkOutBtn.addEventListener('click', () => logActivity('Salida'));
+    addActivityBtn.addEventListener('click', () => {
+      const sel = activitySelect.value;
+      if (!sel) return alert('Por favor, selecciona una actividad.');
+      logActivity(sel);
+    });
+    filterBtn.addEventListener('click', () => {
+      if (!dateFilter.value) return alert('Por favor, selecciona una fecha.');
+      fetchActivities(dateFilter.value);
+    });
+    clearFilterBtn.addEventListener('click', () => {
+      dateFilter.value = '';
+      fetchActivities();
+    });
+  </script>
 </body>
 </html>

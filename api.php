@@ -36,6 +36,7 @@ if ($action === 'get') {
             "SELECT 
                user_id,
                activity_type,
+                trabajo_realizado,
                DATE_FORMAT(timestamp, '%d/%m/%Y %H:%i:%s') AS formatted_timestamp
              FROM activities
              WHERE DATE(timestamp) = ?
@@ -71,6 +72,7 @@ if ($action === 'add' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $user_id       = isset($data['user_id'])       ? trim($data['user_id'])       : '';
     $activity_type = isset($data['activity_type']) ? trim($data['activity_type']) : '';
+    $trabajo_realizado = trim($data['trabajo_realizado'] ?? '');
 
     // validaciones
     if ($user_id === '' || $activity_type === '') {
@@ -85,10 +87,10 @@ if ($action === 'add' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $stmt = $mysqli->prepare(
-        "INSERT INTO activities (user_id, activity_type, timestamp)
-         VALUES (?, ?, NOW())"
+        "INSERT INTO activities (user_id, activity_type,  trabajo_realizado, timestamp)
+         VALUES (?, ?, ?, NOW())"
     );
-    $stmt->bind_param('ss', $user_id, $activity_type);
+    $stmt->bind_param('ss', $user_id, $activity_type, $trabajo_realizado);
     if ($stmt->execute()) {
         echo json_encode(['success' => true]);
     } else {
