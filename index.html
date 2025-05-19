@@ -139,8 +139,8 @@
             }
             try {
                 const response = await fetch('api.php?action=add', {
-                    // method: 'POST',
-                    method: 'GET',
+                    method: 'POST',
+                    // method: 'GET',
                     
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ user_id: userId, activity_type: activityType })
