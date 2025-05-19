@@ -127,27 +127,39 @@
     }
 
     // Loguear actividades (entrada, salida o personalizada)
-    async function logActivity(activityType) {
-      const user_id           = userIdInput.value.trim();
-      const trabajo_realizado = trabajoTextarea.value.trim();
-      if (!user_id) {
-        return alert('Por favor, ingresa un ID de usuario.');
-      }
-      const payload = { user_id, activity_type: activityType, trabajo_realizado };
-      try {
-        const res = await fetch('api.php?action=add', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        if (!res.ok) throw new Error(res.statusText);
-        trabajoTextarea.value = '';         // limpiamos textarea
-        fetchActivities(dateFilter.value);  // recargamos historial
-      } catch (e) {
-        console.error(e);
-        alert('Error al registrar la actividad');
-      }
+async function logActivity(activityType) {
+  const user_id           = userIdInput.value.trim();
+  const trabajo_realizado = trabajoTextarea.value.trim();
+
+  if (!user_id) {
+    return alert('Por favor, ingresa un ID de usuario.');
+  }
+
+  const payload = { user_id, activity_type: activityType, trabajo_realizado };
+
+  try {
+    const res  = await fetch('api.php?action=add', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(payload)
+    });
+    const data = await res.json(); // parseamos siempre la respuesta JSON
+
+    if (!res.ok) {
+      // mostramos en consola y al usuario el error real
+      console.error('Backend error:', data.error);
+      return alert('Error al registrar la actividad:\n' + (data.error || 'Error desconocido'));
     }
+
+    // si todo fue bien, limpiamos y recargamos
+    trabajoTextarea.value = '';
+    fetchActivities(dateFilter.value);
+  } catch (e) {
+    console.error('Fetch error:', e);
+    alert('Error de red o sintaxis al llamar al API.');
+  }
+}
+
 
     // Eventos
     checkInBtn.addEventListener('click', () => logActivity('Entrada'));
