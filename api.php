@@ -6,6 +6,11 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST');
 header('Access-Control-Allow-Headers: Content-Type');
 
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+  http_response_code(200);
+  exit;
+}
+
 // 1) Conexión
 $mysqli = new mysqli(
     "localhost",
@@ -90,7 +95,7 @@ if ($action === 'add' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         "INSERT INTO activities (user_id, activity_type,  trabajo_realizado, timestamp)
          VALUES (?, ?, ?, NOW())"
     );
-    $stmt->bind_param('ss', $user_id, $activity_type, $trabajo_realizado);
+    $stmt->bind_param('sss', $user_id, $activity_type, $trabajo_realizado);
     if ($stmt->execute()) {
         echo json_encode(['success' => true]);
     } else {
