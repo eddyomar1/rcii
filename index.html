@@ -54,10 +54,7 @@
                 <option value="Sacar Maleza">Sacar Maleza</option>
                 <option value="Podar Árboles">Podar Árboles</option> -->
       </select>
-      <textarea id="trabajoRealizado"
-                placeholder="Describe el trabajo realizado…"
-                class="w-full p-2 border rounded mb-2"
-                rows="2"></textarea>
+
       <button id="addActivityBtn"
               class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded">
         Registrar Actividad
@@ -126,15 +123,17 @@
     }
 
     // Loguear actividades (entrada, salida o personalizada)
-async function logActivity(activityType) {
-  const user_id           = userIdInput.value.trim();
-  const trabajo_realizado = trabajoTextarea.value.trim();
+// recibe activityType (p.ej. "Entrada", "Salida" o "Actividad") 
+// y trabajoRealizado (lo que antes venía del textarea)
+async function logActivity(activityType, trabajoRealizado) {
+  const user_id = userIdInput.value.trim();
+  if (!user_id) return alert('Por favor, ingresa un ID de usuario.');
 
-  if (!user_id) {
-    return alert('Por favor, ingresa un ID de usuario.');
-  }
-
-  const payload = { user_id, activity_type: activityType, trabajo_realizado };
+  const payload = {
+    user_id,
+    activity_type: activityType,
+    trabajo_realizado: trabajoRealizado
+  };
 
   try {
     const res  = await fetch('api.php?action=add', {
@@ -142,40 +141,48 @@ async function logActivity(activityType) {
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify(payload)
     });
-    const data = await res.json(); // parseamos siempre la respuesta JSON
-
+    const data = await res.json();
     if (!res.ok) {
-      // mostramos en consola y al usuario el error real
-      console.error('Backend error:', data.error);
-      return alert('Error al registrar la actividad:\n' + (data.error || 'Error desconocido'));
+      return alert('Error al registrar la actividad:\n' + (data.error || res.statusText));
     }
-
-    // si todo fue bien, limpiamos y recargamos
-    trabajoTextarea.value = '';
     fetchActivities(dateFilter.value);
   } catch (e) {
     console.error('Fetch error:', e);
-    alert('Error de red o sintaxis al llamar al API.');
+    alert('Error de red o sintaxis al llamar al API:\n' + e.message);
   }
 }
 
 
-    // Eventos
-    checkInBtn.addEventListener('click', () => logActivity('Entrada'));
-    checkOutBtn.addEventListener('click', () => logActivity('Salida'));
-    addActivityBtn.addEventListener('click', () => {
-      const sel = activitySelect.value;
-      if (!sel) return alert('Por favor, selecciona una actividad.');
-      logActivity(sel);
-    });
-    filterBtn.addEventListener('click', () => {
-      if (!dateFilter.value) return alert('Por favor, selecciona una fecha.');
-      fetchActivities(dateFilter.value);
-    });
-    clearFilterBtn.addEventListener('click', () => {
-      dateFilter.value = '';
-      fetchActivities();
-    });
+
+    // // Eventos
+    // checkInBtn.addEventListener('click', () => logActivity('Entrada'));
+    // checkOutBtn.addEventListener('click', () => logActivity('Salida'));
+    // addActivityBtn.addEventListener('click', () => {
+    //   const sel = activitySelect.value;
+    //   if (!sel) return alert('Por favor, selecciona una actividad.');
+    //   logActivity(sel);
+    // });
+    // filterBtn.addEventListener('click', () => {
+    //   if (!dateFilter.value) return alert('Por favor, selecciona una fecha.');
+    //   fetchActivities(dateFilter.value);
+    // });
+    // clearFilterBtn.addEventListener('click', () => {
+    //   dateFilter.value = '';
+    //   fetchActivities();
+    // });
+
+
+    // Chequeo de entrada/salida sigue igual:
+checkInBtn .addEventListener('click', () => logActivity('Entrada', ''));
+checkOutBtn.addEventListener('click', () => logActivity('Salida',  ''));
+
+// Para la actividad personalizada, toma el valor del select
+addActivityBtn.addEventListener('click', () => {
+  const opcion = activitySelect.value;
+  if (!opcion) return alert('Por favor, selecciona una actividad.');
+  // enviamos la opción como trabajo_realizado
+  logActivity('Actividad', opcion);
+});
 
 
 
