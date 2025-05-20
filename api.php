@@ -1,5 +1,4 @@
 <?php
-// api.php
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -14,9 +13,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 // 1) Conexión
 $mysqli = new mysqli(
     "localhost",
-    "u138076177_chacharito",   // tu usuario MySQL
-    "3spWifiPruev@",           // tu contraseña MySQL
-    "u138076177_pw"            // tu base de datos
+    "u138076177_chacharito",   
+    "3spWifiPruev@",           
+    "u138076177_pw"            
 );
 if ($mysqli->connect_error) {
     http_response_code(500);

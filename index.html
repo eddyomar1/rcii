@@ -1,67 +1,40 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport"
-        content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
   <title>Actividad Diaria de RCII</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body class="bg-aqua flex items-center justify-center min-h-screen p-4">
   <div class="bg-white p-4 sm:p-6 rounded-lg shadow-lg w-full max-w-md">
     <h1 class="text-2xl font-bold text-center mb-4">Actividad Diaria de RCII</h1>
 
     <!-- Usuario + Checkin/Checkout -->
     <div class="mb-4">
-      <input id="userId" type="text" placeholder="ID de usuario"
-             class="w-full p-2 border rounded mb-2" />
-      <button id="checkInBtn"
-              class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded mb-2">
+      <input id="userId" type="text" placeholder="ID de usuario" class="w-full p-2 border rounded mb-2" />
+      <button id="checkInBtn" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded mb-2">
         Registrar Entrada
       </button>
-      <button id="checkOutBtn"
-              class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded">
+      <button id="checkOutBtn" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded">
         Registrar Salida
       </button>
     </div>
 
     <!-- Lista de Actividades + Trabajo Realizado -->
-<div class="mb-4">
-      <select id="activitySelect"
-              class="w-full p-2 border rounded mb-2">
+    <div class="mb-4">
+      <select id="activitySelect" class="w-full p-2 border rounded mb-2">
         <option value="">Selecciona una actividad</option>
-                <!-- <option value="Edificio 1">Limpiar Edificio 1</option>
-                <option value="Edificio 2">Limpiar Edificio 2</option>
-                <option value="Edificio 3">Limpiar Edificio 3</option>
-                <option value="Edificio 4">Limpiar Edificio 4</option>
-                <option value="Edificio 5">Limpiar Edificio 5</option>
-                <option value="Edificio 6">Limpiar Edificio 6</option>
-                <option value="Edificio 7">Limpiar Edificio 7</option>
-                <option value="Edificio 8">Limpiar Edificio 8</option>
-                <option value="Edificio 9">Limpiar Edificio 9</option>
-                <option value="Edificio 10">Limpiar Edificio 10</option>
-                <option value="Edificio 11">Limpiar Edificio 11</option>
-                <option value="Edificio 12">Limpiar Edificio 12</option>
-                <option value="Edificio 13">Limpiar Edificio 13</option>
-                <option value="Edificio 14">Limpiar Edificio 14</option>
-                <option value="Edificio 15">Limpiar Edificio 15</option>
-                <option value="Edificio 16">Limpiar Edificio 16</option>
-                <option value="Edificio 17">Limpiar Edificio 17</option>
-                <option value="Edificio 18">Limpiar Edificio 18</option>
-                <option value="Edificio 19">Limpiar Edificio 19</option>
-                <option value="Edificio 20">Limpiar Edificio 20</option>
-                <option value="Podar Jardín">Podar Jardín</option>
-                <option value="Sacar Maleza">Sacar Maleza</option>
-                <option value="Podar Árboles">Podar Árboles</option> -->
       </select>
 
-      <button id="addActivityBtn"
-              class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded">
+      <button id="addActivityBtn" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded">
         Registrar Actividad
       </button>
     </div>
-
-    <!-- Filtro por Fecha -->
+    <!-- 
+    Filtro por Fecha
     <div class="mb-4">
       <label for="dateFilter" class="block mb-1">Filtrar por fecha:</label>
       <input id="dateFilter" type="date"
@@ -76,24 +49,26 @@
       </button>
     </div>
 
-    <!-- Historial -->
+    
     <h2 class="text-lg font-semibold mb-2">Historial</h2>
     <ul id="activityLog"
         class="border p-4 rounded max-h-64 overflow-y-auto text-sm"></ul>
+        -->
   </div>
+
 
   <script>
     // Referencias DOM
-    const userIdInput      = document.getElementById('userId');
-    const checkInBtn       = document.getElementById('checkInBtn');
-    const checkOutBtn      = document.getElementById('checkOutBtn');
-    const activitySelect   = document.getElementById('activitySelect');
-    const trabajoTextarea  = document.getElementById('trabajoRealizado');
-    const addActivityBtn   = document.getElementById('addActivityBtn');
-    const dateFilter       = document.getElementById('dateFilter');
-    const filterBtn        = document.getElementById('filterBtn');
-    const clearFilterBtn   = document.getElementById('clearFilterBtn');
-    const activityLog      = document.getElementById('activityLog');
+    const userIdInput = document.getElementById('userId');
+    const checkInBtn = document.getElementById('checkInBtn');
+    const checkOutBtn = document.getElementById('checkOutBtn');
+    const activitySelect = document.getElementById('activitySelect');
+    const trabajoTextarea = document.getElementById('trabajoRealizado');
+    const addActivityBtn = document.getElementById('addActivityBtn');
+    const dateFilter = document.getElementById('dateFilter');
+    const filterBtn = document.getElementById('filterBtn');
+    const clearFilterBtn = document.getElementById('clearFilterBtn');
+    const activityLog = document.getElementById('activityLog');
 
     // Carga inicial
     fetchActivities();
@@ -123,121 +98,89 @@
     }
 
     // Loguear actividades (entrada, salida o personalizada)
-// recibe activityType (p.ej. "Entrada", "Salida" o "Actividad") 
-// y trabajoRealizado (lo que antes venía del textarea)
-async function logActivity(activityType, trabajoRealizado) {
-  const user_id = userIdInput.value.trim();
-  if (!user_id) return alert('Por favor, ingresa un ID de usuario.');
+    // recibe activityType (p.ej. "Entrada", "Salida" o "Actividad") 
+    // y trabajoRealizado (lo que antes venía del textarea)
+    async function logActivity(activityType, trabajoRealizado) {
+      const user_id = userIdInput.value.trim();
+      if (!user_id) return alert('Por favor, ingresa un ID de usuario.');
 
-  const payload = {
-    user_id,
-    activity_type: activityType,
-    trabajo_realizado: trabajoRealizado
-  };
+      const payload = {
+        user_id,
+        activity_type: activityType,
+        trabajo_realizado: trabajoRealizado
+      };
 
-  try {
-    const res  = await fetch('api.php?action=add', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      return alert('Error al registrar la actividad:\n' + (data.error || res.statusText));
+      try {
+        const res = await fetch('api.php?action=add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          return alert('Error al registrar la actividad:\n' + (data.error || res.statusText));
+        }
+        fetchActivities(dateFilter.value);
+      } catch (e) {
+        console.error('Fetch error:', e);
+        alert('Error de red o sintaxis al llamar al API:\n' + e.message);
+      }
     }
-    fetchActivities(dateFilter.value);
-  } catch (e) {
-    console.error('Fetch error:', e);
-    alert('Error de red o sintaxis al llamar al API:\n' + e.message);
-  }
-}
 
-
-
-    // // Eventos
-    // checkInBtn.addEventListener('click', () => logActivity('Entrada'));
-    // checkOutBtn.addEventListener('click', () => logActivity('Salida'));
-    // addActivityBtn.addEventListener('click', () => {
-    //   const sel = activitySelect.value;
-    //   if (!sel) return alert('Por favor, selecciona una actividad.');
-    //   logActivity(sel);
-    // });
-    // filterBtn.addEventListener('click', () => {
-    //   if (!dateFilter.value) return alert('Por favor, selecciona una fecha.');
-    //   fetchActivities(dateFilter.value);
-    // });
-    // clearFilterBtn.addEventListener('click', () => {
-    //   dateFilter.value = '';
-    //   fetchActivities();
-    // });
 
 
     // Chequeo de entrada/salida sigue igual:
-checkInBtn .addEventListener('click', () => logActivity('Entrada', ''));
-checkOutBtn.addEventListener('click', () => logActivity('Salida',  ''));
+    checkInBtn.addEventListener('click', () => logActivity('Entrada', ''));
+    checkOutBtn.addEventListener('click', () => logActivity('Salida', ''));
 
-// Para la actividad personalizada, toma el valor del select
-addActivityBtn.addEventListener('click', () => {
-  const opcion = activitySelect.value;
-  if (!opcion) return alert('Por favor, selecciona una actividad.');
-  // enviamos la opción como trabajo_realizado
-  logActivity('Actividad', opcion);
-});
-
-
+    // Para la actividad personalizada, toma el valor del select
+    addActivityBtn.addEventListener('click', () => {
+      const opcion = activitySelect.value;
+      if (!opcion) return alert('Por favor, selecciona una actividad.');
+      // enviamos la opción como trabajo_realizado
+      logActivity('Actividad', opcion);
+    });
 
 
+    document.addEventListener('DOMContentLoaded', async () => {
+      const select = document.getElementById('activitySelect');
+      try {
+        // Asegúrate de que 'actividades.txt' esté en tu servidor y sea accesible vía HTTP
+        const res = await fetch('actividades.txt');
+        const txt = await res.text();
+        const lines = txt.split(/\r?\n/).filter(l => l.trim() !== '');
 
+        for (let line of lines) {
+          let value, label;
+          // Si usas TAB como separador:
+          if (line.includes('\t')) {
+            [value, label] = line.split('\t', 2);
+          }
+          // Si usas pipe (|) como separador:
+          else if (line.includes('|')) {
+            [value, label] = line.split('|', 2);
+          }
+          // Si no tienes delimitador y quieres texto = línea entera:
+          else {
+            value = label = line;
+          }
 
+          value = value.trim();
+          label = label.trim();
 
-document.addEventListener('DOMContentLoaded', async () => {
-  const select = document.getElementById('activitySelect');
-  try {
-    // Asegúrate de que 'actividades.txt' esté en tu servidor y sea accesible vía HTTP
-    const res  = await fetch('actividades.txt');
-    const txt  = await res.text();
-    const lines = txt.split(/\r?\n/).filter(l => l.trim() !== '');
-
-    for (let line of lines) {
-      let value, label;
-      // Si usas TAB como separador:
-      if (line.includes('\t')) {
-        [value, label] = line.split('\t', 2);
+          const opt = document.createElement('option');
+          opt.value = value;
+          opt.textContent = label;
+          select.appendChild(opt);
+        }
+      } catch (e) {
+        console.error('No pude cargar actividades.txt:', e);
       }
-      // Si usas pipe (|) como separador:
-      else if (line.includes('|')) {
-        [value, label] = line.split('|', 2);
-      }
-      // Si no tienes delimitador y quieres texto = línea entera:
-      else {
-        value = label = line;
-      }
-
-      value = value.trim();
-      label = label.trim();
-
-      const opt = document.createElement('option');
-      opt.value       = value;
-      opt.textContent = label;
-      select.appendChild(opt);
-    }
-  } catch (e) {
-    console.error('No pude cargar actividades.txt:', e);
-  }
-});
-
-
-
-
-
-
-
-
-
-
+    });
 
 
 
   </script>
 </body>
+
 </html>
