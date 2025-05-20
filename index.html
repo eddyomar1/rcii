@@ -26,12 +26,11 @@
     </div>
 
     <!-- Lista de Actividades + Trabajo Realizado -->
-    <div class="mb-4">
+<div class="mb-4">
       <select id="activitySelect"
               class="w-full p-2 border rounded mb-2">
         <option value="">Selecciona una actividad</option>
-  <option value="">Selecciona una actividad</option>
-                <option value="Edificio 1">Limpiar Edificio 1</option>
+                <!-- <option value="Edificio 1">Limpiar Edificio 1</option>
                 <option value="Edificio 2">Limpiar Edificio 2</option>
                 <option value="Edificio 3">Limpiar Edificio 3</option>
                 <option value="Edificio 4">Limpiar Edificio 4</option>
@@ -53,7 +52,7 @@
                 <option value="Edificio 20">Limpiar Edificio 20</option>
                 <option value="Podar Jardín">Podar Jardín</option>
                 <option value="Sacar Maleza">Sacar Maleza</option>
-                <option value="Podar Árboles">Podar Árboles</option>
+                <option value="Podar Árboles">Podar Árboles</option> -->
       </select>
       <textarea id="trabajoRealizado"
                 placeholder="Describe el trabajo realizado…"
@@ -177,6 +176,61 @@ async function logActivity(activityType) {
       dateFilter.value = '';
       fetchActivities();
     });
+
+
+
+
+
+
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const select = document.getElementById('activitySelect');
+  try {
+    // Asegúrate de que 'actividades.txt' esté en tu servidor y sea accesible vía HTTP
+    const res  = await fetch('actividades.txt');
+    const txt  = await res.text();
+    const lines = txt.split(/\r?\n/).filter(l => l.trim() !== '');
+
+    for (let line of lines) {
+      let value, label;
+      // Si usas TAB como separador:
+      if (line.includes('\t')) {
+        [value, label] = line.split('\t', 2);
+      }
+      // Si usas pipe (|) como separador:
+      else if (line.includes('|')) {
+        [value, label] = line.split('|', 2);
+      }
+      // Si no tienes delimitador y quieres texto = línea entera:
+      else {
+        value = label = line;
+      }
+
+      value = value.trim();
+      label = label.trim();
+
+      const opt = document.createElement('option');
+      opt.value       = value;
+      opt.textContent = label;
+      select.appendChild(opt);
+    }
+  } catch (e) {
+    console.error('No pude cargar actividades.txt:', e);
+  }
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
   </script>
 </body>
 </html>
