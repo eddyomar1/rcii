@@ -21,3 +21,4 @@ Edificio 20 Limpiar Edificio 20
 Podar Jardín Podar Jardín
 Sacar Maleza Sacar Maleza
 Podar Árboles Podar Árboles
+limpiar escaleras
