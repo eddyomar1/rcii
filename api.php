@@ -10,6 +10,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
   exit;
 }
 
+
+
 // 1) Conexión
 $mysqli = new mysqli(
     "localhost",
@@ -69,30 +71,58 @@ if ($action === 'get') {
     exit;
 }
 
+// api.php
+
+// … tu código de conexión, cabeceras, manejo de OPTIONS …
+
+$action = $_GET['action'] ?? '';
+
 if ($action === 'add' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    // 2.b) Inserción de nueva actividad
-    $raw = file_get_contents('php://input');
+    // 1) Leemos el JSON
+    $raw  = file_get_contents('php://input');
     $data = json_decode($raw, true);
 
-    $user_id       = isset($data['user_id'])       ? trim($data['user_id'])       : '';
-    $activity_type = isset($data['activity_type']) ? trim($data['activity_type']) : '';
+    $user_id           = trim($data['user_id']       ?? '');
+    $activity_type     = trim($data['activity_type'] ?? '');
     $trabajo_realizado = trim($data['trabajo_realizado'] ?? '');
 
-    // validaciones
+    // 2) Validaciones básicas
     if ($user_id === '' || $activity_type === '') {
         http_response_code(400);
-        echo json_encode(['error' => 'Missing user_id or activity_type']);
-        exit;
-    }
-    if (strlen($user_id) > 50 || strlen($activity_type) > 100) {
-        http_response_code(400);
-        echo json_encode(['error' => 'user_id or activity_type too long']);
+        echo json_encode(['error' => 'Falta user_id o activity_type']);
         exit;
     }
 
+    // ← Aquí agrega la comprobación de últimas Entradas/Salidas →
+    // 3) Recuperar última actividad de este usuario
     $stmt = $mysqli->prepare(
-        "INSERT INTO activities (user_id, activity_type,  trabajo_realizado, timestamp)
-         VALUES (?, ?, ?, NOW())"
+      "SELECT activity_type
+       FROM activities
+       WHERE user_id = ?
+       ORDER BY timestamp DESC
+       LIMIT 1"
+    );
+    $stmt->bind_param('s', $user_id);
+    $stmt->execute();
+    $last = $stmt->get_result()->fetch_assoc();
+    $lastType = $last['activity_type'] ?? '';
+
+    // 4) Prohibir dos Entradas o dos Salidas consecutivas
+    if (($activity_type === 'Entrada' && $lastType === 'Entrada') ||
+        ($activity_type === 'Salida'  && $lastType === 'Salida')) {
+        http_response_code(400);
+        echo json_encode([
+          'error' => "No puedes registrar dos '$activity_type' consecutivas."
+        ]);
+        exit;
+    }
+    // ← fin comprobación →
+
+    // 5) Insert normal
+    $stmt = $mysqli->prepare(
+      "INSERT INTO activities
+         (user_id, activity_type, trabajo_realizado, timestamp)
+       VALUES (?, ?, ?, NOW())"
     );
     $stmt->bind_param('sss', $user_id, $activity_type, $trabajo_realizado);
     if ($stmt->execute()) {
@@ -103,6 +133,8 @@ if ($action === 'add' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     exit;
 }
+
+
 
 // acción inválida
 http_response_code(400);
