@@ -3,7 +3,8 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+  <meta name="viewport"
+        content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
   <title>Actividad Diaria de RCII</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -14,172 +15,110 @@
 
     <!-- Usuario + Checkin/Checkout -->
     <div class="mb-4">
-      <input id="userId" type="text" placeholder="ID de usuario" class="w-full p-2 border rounded mb-2" />
-      <button id="checkInBtn" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded mb-2">
+      <input id="userId" type="text" placeholder="ID de usuario"
+             class="w-full p-2 border rounded mb-2" />
+      <button id="checkInBtn"
+              class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded mb-2">
         Registrar Entrada
       </button>
-      <button id="checkOutBtn" class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded">
+      <button id="checkOutBtn"
+              class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded">
         Registrar Salida
       </button>
     </div>
 
-    <!-- Lista de Actividades + Trabajo Realizado -->
+    <!-- Lista de Actividades -->
     <div class="mb-4">
-      <select id="activitySelect" class="w-full p-2 border rounded mb-2">
+      <select id="activitySelect"
+              class="w-full p-2 border rounded mb-2">
         <option value="">Selecciona una actividad</option>
       </select>
-
-      <button id="addActivityBtn" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded">
+      <button id="addActivityBtn"
+              class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded">
         Registrar Actividad
       </button>
     </div>
-    <!-- 
-    Filtro por Fecha
-    <div class="mb-4">
-      <label for="dateFilter" class="block mb-1">Filtrar por fecha:</label>
-      <input id="dateFilter" type="date"
-             class="w-full p-2 border rounded mb-2" />
-      <button id="filterBtn"
-              class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 rounded mb-2">
-        Filtrar por Fecha
-      </button>
-      <button id="clearFilterBtn"
-              class="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 rounded">
-        Mostrar Todas
-      </button>
-    </div>
-
-    
-    <h2 class="text-lg font-semibold mb-2">Historial</h2>
-    <ul id="activityLog"
-        class="border p-4 rounded max-h-64 overflow-y-auto text-sm"></ul>
-        -->
   </div>
-
 
   <script>
     // Referencias DOM
-    const userIdInput = document.getElementById('userId');
-    const checkInBtn = document.getElementById('checkInBtn');
-    const checkOutBtn = document.getElementById('checkOutBtn');
-    const activitySelect = document.getElementById('activitySelect');
-    // const trabajoTextarea = document.getElementById('trabajoRealizado');
-    const addActivityBtn = document.getElementById('addActivityBtn');
-    const dateFilter = document.getElementById('dateFilter');
-    const filterBtn = document.getElementById('filterBtn');
-    const clearFilterBtn = document.getElementById('clearFilterBtn');
-    const activityLog = document.getElementById('activityLog');
+    const userIdInput     = document.getElementById('userId');
+    const checkInBtn      = document.getElementById('checkInBtn');
+    const checkOutBtn     = document.getElementById('checkOutBtn');
+    const activitySelect  = document.getElementById('activitySelect');
+    const addActivityBtn  = document.getElementById('addActivityBtn');
 
-    // Carga inicial
-    fetchActivities();
-
-    // Fetch de actividades
-    async function fetchActivities(fecha = '') {
-      const url = fecha
-        ? `api.php?action=get&date=${encodeURIComponent(fecha)}`
-        : `api.php?action=get`;
-      try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(res.statusText);
-        const actividades = await res.json();
-        activityLog.innerHTML = actividades.length
-          ? actividades.map(a => `
-              <li class="py-1">
-                ${a.formatted_timestamp} — ${a.activity_type}
-                ${a.trabajo_realizado ? `: ${a.trabajo_realizado}` : ''}
-                <span class="text-gray-500"> (Usuario: ${a.user_id})</span>
-              </li>
-            `).join('')
-          : `<li class="py-1 text-gray-500">No hay actividades.</li>`;
-      } catch (e) {
-        console.error(e);
-        // alert('Error al cargar actividades');
-      }
-    }
-
-    // Loguear actividades (entrada, salida o personalizada)
-    // recibe activityType (p.ej. "Entrada", "Salida" o "Actividad") 
-    // y trabajoRealizado (lo que antes venía del textarea)
-    async function logActivity(activityType) {
+    // Función para enviar la actividad
+    async function logActivity(activityType, trabajoRealizado) {
       const user_id = userIdInput.value.trim();
-      if (!user_id) return alert('Por favor, ingresa un ID de usuario.');
+      if (!user_id) {
+        return alert('Por favor, ingresa un ID de usuario.');
+      }
 
       const payload = {
         user_id,
-        activity_type: activityType,
-        // trabajo_realizado: trabajoRealizado
+        activity_type:     activityType,
+        trabajo_realizado: trabajoRealizado
       };
 
       try {
-        const res = await fetch('api.php?action=add', {
-          method: 'POST',
+        const res  = await fetch('api.php?action=add', {
+          method:  'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body:    JSON.stringify(payload)
         });
         const data = await res.json();
         if (!res.ok) {
           return alert('Error al registrar la actividad:\n' + (data.error || res.statusText));
         }
-        fetchActivities(dateFilter.value);
+        alert('Actividad registrada con éxito');
       } catch (e) {
         console.error('Fetch error:', e);
         alert('Error de red o sintaxis al llamar al API:\n' + e.message);
       }
     }
 
+    // Eventos para Entrada / Salida
+    checkInBtn .addEventListener('click', () => logActivity('Entrada',  ''));
+    checkOutBtn.addEventListener('click', () => logActivity('Salida',   ''));
 
-
-    // Chequeo de entrada/salida sigue igual:
-    checkInBtn.addEventListener('click', () => logActivity('Entrada', ''));
-    checkOutBtn.addEventListener('click', () => logActivity('Salida', ''));
-
-    // Para la actividad personalizada, toma el valor del select
+    // Evento para Actividad personalizada
     addActivityBtn.addEventListener('click', () => {
       const opcion = activitySelect.value;
-      if (!opcion) return alert('Por favor, selecciona una actividad.');
+      if (!opcion) {
+        return alert('Por favor, selecciona una actividad.');
+      }
       // enviamos la opción como trabajo_realizado
       logActivity('Actividad', opcion);
     });
 
-
+    // Cargar opciones desde actividades.txt
     document.addEventListener('DOMContentLoaded', async () => {
-      const select = document.getElementById('activitySelect');
       try {
-        // Asegúrate de que 'actividades.txt' esté en tu servidor y sea accesible vía HTTP
         const res = await fetch('actividades.txt');
         const txt = await res.text();
-        const lines = txt.split(/\r?\n/).filter(l => l.trim() !== '');
+        const lines = txt.split(/\r?\n/).filter(l => l.trim());
 
         for (let line of lines) {
           let value, label;
-          // Si usas TAB como separador:
           if (line.includes('\t')) {
             [value, label] = line.split('\t', 2);
-          }
-          // Si usas pipe (|) como separador:
-          else if (line.includes('|')) {
+          } else if (line.includes('|')) {
             [value, label] = line.split('|', 2);
-          }
-          // Si no tienes delimitador y quieres texto = línea entera:
-          else {
+          } else {
             value = label = line;
           }
-
           value = value.trim();
           label = label.trim();
-
           const opt = document.createElement('option');
-          opt.value = value;
+          opt.value       = value;
           opt.textContent = label;
-          select.appendChild(opt);
+          activitySelect.appendChild(opt);
         }
       } catch (e) {
         console.error('No pude cargar actividades.txt:', e);
       }
     });
-
-
-
   </script>
 </body>
 
