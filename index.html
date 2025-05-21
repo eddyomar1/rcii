@@ -100,14 +100,14 @@
     // Loguear actividades (entrada, salida o personalizada)
     // recibe activityType (p.ej. "Entrada", "Salida" o "Actividad") 
     // y trabajoRealizado (lo que antes venía del textarea)
-    async function logActivity(activityType, trabajoRealizado) {
+    async function logActivity(activityType) {
       const user_id = userIdInput.value.trim();
       if (!user_id) return alert('Por favor, ingresa un ID de usuario.');
 
       const payload = {
         user_id,
         activity_type: activityType,
-        trabajo_realizado: trabajoRealizado
+        // trabajo_realizado: trabajoRealizado
       };
 
       try {
@@ -138,7 +138,7 @@
       const opcion = activitySelect.value;
       if (!opcion) return alert('Por favor, selecciona una actividad.');
       // enviamos la opción como trabajo_realizado
-      // logActivity('Actividad', opcion);
+      logActivity('Actividad', opcion);
     });
 
 
