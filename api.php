@@ -27,6 +27,35 @@ if ($mysqli->connect_error) {
     exit;
 }
 
+
+// … cabeceras, CORS, conexión …
+
+// 3.b) Obtener la última actividad de un usuario
+if (isset($_GET['action']) && $_GET['action'] === 'last' && $_SERVER['REQUEST_METHOD'] === 'GET') {
+    $user_id = trim($_GET['user_id'] ?? '');
+    if ($user_id === '') {
+        http_response_code(400);
+        echo json_encode(['error' => 'Missing user_id']);
+        exit;
+    }
+    $stmt = $mysqli->prepare(
+        "SELECT activity_type
+         FROM activities
+         WHERE user_id = ?
+         ORDER BY timestamp DESC
+         LIMIT 1"
+    );
+    $stmt->bind_param('s', $user_id);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    echo json_encode([
+      'last' => $row['activity_type'] ?? null
+    ]);
+    exit;
+}
+
+
+
 // 4) Determinar acción
 $action = $_GET['action'] ?? '';
 
