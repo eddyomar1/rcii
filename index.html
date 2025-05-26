@@ -62,7 +62,6 @@
     // 1) Consulta al backend para saber la última actividad y ajustar botones
     async function updateActionButton() {
       const user_id = userIdInput.value.trim();
-      // Si no hay ID, reseteamos todo
       if (!user_id) {
         lastType = null;
         actionBtn.textContent    = "Ingresa tu ID";
@@ -71,8 +70,7 @@
         return;
       }
 
-      // Mientras cargamos...
-      actionBtn.disabled   = true;
+      actionBtn.disabled    = true;
       actionBtn.textContent = "Cargando…";
 
       try {
@@ -80,16 +78,15 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || res.statusText);
 
-        // Actualizamos lastType
         lastType = data.last;  // "Entrada", "Salida" o null
 
-        // Ajustamos el botón único
+        // Alterna acción Entrada/Salida
         nextAction = lastType === "Entrada" ? "Salida" : "Entrada";
         actionBtn.textContent = `Registrar ${nextAction}`;
         actionBtn.disabled    = false;
 
-        // Solo habilitar Registrar Actividad si ya hay al menos una Entrada
-        addActivityBtn.disabled = (lastType === null);
+        // Solo habilitar Registrar Actividad si la última fue ENTRADA
+        addActivityBtn.disabled = (lastType !== "Entrada");
       } catch (e) {
         console.error("Error al obtener última actividad:", e);
         lastType = null;
@@ -139,9 +136,13 @@
       if (!user_id) {
         return alert("Por favor, ingresa un ID de usuario.");
       }
-      // Validamos otra vez que exista al menos una Entrada
-      if (lastType === null) {
-        return alert("Debes registrar primero una Entrada antes de registrar actividades.");
+      // Ahora obligamos a que la última sea ENTRADA
+      if (lastType !== "Entrada") {
+        return alert(
+          lastType === null
+            ? "Debes registrar primero una Entrada."
+            : "Solo puedes registrar actividades después de una Entrada, no tras una Salida."
+        );
       }
       if (!trabajo) {
         return alert("Por favor, selecciona una actividad.");
@@ -201,8 +202,7 @@
       loadActivitiesList();
       updateActionButton();
     });
-    userIdInput.addEventListener("change", updateActionButton);
-    userIdInput.addEventListener("keyup",  updateActionButton);
+    userIdInput.addEventListener("input", updateActionButton);
     actionBtn.addEventListener("click",    logToggle);
     addActivityBtn.addEventListener("click", logCustomActivity);
   </script>
