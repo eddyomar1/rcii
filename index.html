@@ -9,7 +9,6 @@
   <title>Actividad Diaria de RCII</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-
 <body class="bg-aqua flex items-center justify-center min-h-screen p-4">
   <div class="bg-white p-4 sm:p-6 rounded-lg shadow-lg w-full max-w-md">
     <h1 class="text-2xl font-bold text-center mb-4">
@@ -41,6 +40,7 @@
       <button
         id="addActivityBtn"
         class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded"
+        disabled
       >
         Registrar Actividad
       </button>
@@ -62,12 +62,16 @@
     // 1) Consulta al backend para saber la última actividad y ajustar botones
     async function updateActionButton() {
       const user_id = userIdInput.value.trim();
+      // Si no hay ID, reseteamos todo
       if (!user_id) {
+        lastType = null;
         actionBtn.textContent    = "Ingresa tu ID";
         actionBtn.disabled       = true;
         addActivityBtn.disabled  = true;
         return;
       }
+
+      // Mientras cargamos...
       actionBtn.disabled   = true;
       actionBtn.textContent = "Cargando…";
 
@@ -76,17 +80,19 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || res.statusText);
 
-        lastType = data.last;  // puede ser "Entrada", "Salida" o null
+        // Actualizamos lastType
+        lastType = data.last;  // "Entrada", "Salida" o null
 
-        // Alterna acción Entrada/Salida
+        // Ajustamos el botón único
         nextAction = lastType === "Entrada" ? "Salida" : "Entrada";
         actionBtn.textContent = `Registrar ${nextAction}`;
         actionBtn.disabled    = false;
 
-        // Solo habilitar "Registrar Actividad" si ya hay una Entrada
+        // Solo habilitar Registrar Actividad si ya hay al menos una Entrada
         addActivityBtn.disabled = (lastType === null);
       } catch (e) {
         console.error("Error al obtener última actividad:", e);
+        lastType = null;
         actionBtn.textContent   = "Error al cargar";
         actionBtn.disabled      = true;
         addActivityBtn.disabled = true;
@@ -117,7 +123,7 @@
           throw new Error(data.error || res.statusText);
         }
         alert(`${nextAction} registrada con éxito`);
-        // Tras insertar, recalcula última acción
+        // Tras insertar, recalcula el estado
         updateActionButton();
       } catch (e) {
         console.error("Fetch error:", e);
@@ -133,8 +139,9 @@
       if (!user_id) {
         return alert("Por favor, ingresa un ID de usuario.");
       }
+      // Validamos otra vez que exista al menos una Entrada
       if (lastType === null) {
-        return alert("Debes registrar primero una Entrada antes de actividades.");
+        return alert("Debes registrar primero una Entrada antes de registrar actividades.");
       }
       if (!trabajo) {
         return alert("Por favor, selecciona una actividad.");
