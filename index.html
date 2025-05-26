@@ -8,6 +8,7 @@
 </head>
 <body class="bg-aqua flex items-center justify-center min-h-screen p-4">
   <div class="bg-white p-4 sm:p-6 rounded-lg shadow-lg w-full max-w-md">
+
     <h1 class="text-2xl font-bold text-center mb-4">
       Actividad Diaria de RCII
     </h1>
@@ -24,39 +25,40 @@
         id="actionBtn"
         class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded"
         disabled
-      >
-        Cargando…
-      </button>
+      >Cargando…</button>
     </div>
 
-    <!-- Lista de Actividades -->
-    <div class="mb-4">
-      <select id="activitySelect" class="w-full p-2 border rounded mb-2">
+    <!-- Lista de Actividades (oculto hasta "Registrar Salida") -->
+    <div id="activityBlock" class="mb-4 hidden">
+      <select id="activitySelect"
+              class="w-full p-2 border rounded mb-2">
         <option value="">Selecciona una actividad</option>
       </select>
       <button
         id="addActivityBtn"
         class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded"
         disabled
-      >
-        Registrar Actividad
-      </button>
+      >Registrar Actividad</button>
     </div>
+
   </div>
 
   <script>
     const userIdInput    = document.getElementById("userId");
     const actionBtn      = document.getElementById("actionBtn");
+    const activityBlock  = document.getElementById("activityBlock");
     const activitySelect = document.getElementById("activitySelect");
     const addActivityBtn = document.getElementById("addActivityBtn");
 
     let nextAction = "Entrada";
     let lastType   = null;
 
-    // Ajusta estilos de actionBtn según acción
     function styleActionBtn() {
-      // Siempre quitar ambas clases antes de aplicar
-      actionBtn.classList.remove("bg-blue-500","hover:bg-blue-600","bg-red-500","hover:bg-red-600");
+      // limpio todas las clases de color
+      actionBtn.classList.remove(
+        "bg-blue-500","hover:bg-blue-600",
+        "bg-red-500","hover:bg-red-600"
+      );
       if (nextAction === "Entrada") {
         actionBtn.classList.add("bg-blue-500","hover:bg-blue-600");
       } else {
@@ -65,7 +67,6 @@
       actionBtn.textContent = `Registrar ${nextAction}`;
     }
 
-    // 1) Consulta la última actividad y habilita/deshabilita botones
     async function updateActionButton() {
       const user_id = userIdInput.value.trim();
       if (!user_id) {
@@ -73,45 +74,57 @@
         actionBtn.disabled      = true;
         addActivityBtn.disabled = true;
         actionBtn.textContent   = "Ingresa tu ID";
+        activityBlock.classList.add("hidden");
         return;
       }
 
       actionBtn.disabled    = true;
       actionBtn.textContent = "Cargando…";
+
       try {
         const res  = await fetch(`api.php?action=last&user_id=${encodeURIComponent(user_id)}`);
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
 
-        lastType = data.last; // "Entrada","Salida" o null
+        lastType = data.last;              // "Entrada","Salida" o null
         nextAction = lastType === "Entrada" ? "Salida" : "Entrada";
 
-        // Estilo y texto
         styleActionBtn();
         actionBtn.disabled = false;
 
-        // Desactivar registrar actividad hasta tras una Entrada
-        addActivityBtn.disabled = (lastType !== "Entrada");
+        // Solo mostramos el bloque de actividades si el botón ya pasó a "Salida"
+        if (nextAction === "Salida") {
+          activityBlock.classList.remove("hidden");
+          addActivityBtn.disabled = false; // habilitamos registrar actividad
+        } else {
+          activityBlock.classList.add("hidden");
+          addActivityBtn.disabled = true;
+        }
       } catch (e) {
         console.error(e);
         lastType = null;
         actionBtn.disabled      = true;
         addActivityBtn.disabled = true;
         actionBtn.textContent   = "Error";
+        activityBlock.classList.add("hidden");
       }
     }
 
-    // 2) Registrar Entrada/Salida
     async function logToggle() {
       const user_id = userIdInput.value.trim();
       if (!user_id) return alert("Ingresa un ID de usuario.");
 
-      const payload = { user_id, activity_type: nextAction, trabajo_realizado: "" };
+      const payload = {
+        user_id,
+        activity_type:     nextAction,
+        trabajo_realizado: ""
+      };
+
       try {
-        const res = await fetch("api.php?action=add", {
-          method: "POST",
+        const res  = await fetch("api.php?action=add", {
+          method:  "POST",
           headers: {"Content-Type":"application/json"},
-          body: JSON.stringify(payload)
+          body:    JSON.stringify(payload)
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
@@ -122,36 +135,33 @@
       }
     }
 
-    // 3) Registrar actividad personalizada
     async function logCustomActivity() {
       const user_id = userIdInput.value.trim();
       const trabajo = activitySelect.value;
-      if (!user_id) return alert("Ingresa un ID de usuario.");
-      if (lastType !== "Entrada") {
-        return alert(
-          lastType === null
-            ? "Primero registra una Entrada."
-            : "Solo después de una Entrada puedes registrar actividades."
-        );
-      }
-      if (!trabajo) return alert("Selecciona una actividad.");
+      if (!user_id)       return alert("Ingresa un ID.");
+      if (nextAction!=="Salida") return alert("Debes hacer Entrada antes.");
+      if (!trabajo)       return alert("Selecciona actividad.");
 
-      const payload = { user_id, activity_type:"Actividad", trabajo_realizado:trabajo };
+      const payload = {
+        user_id,
+        activity_type:     "Actividad",
+        trabajo_realizado: trabajo
+      };
+
       try {
-        const res = await fetch("api.php?action=add", {
-          method:"POST",
-          headers:{"Content-Type":"application/json"},
-          body: JSON.stringify(payload)
+        const res  = await fetch("api.php?action=add", {
+          method:  "POST",
+          headers: {"Content-Type":"application/json"},
+          body:    JSON.stringify(payload)
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error);
-        alert("Actividad registrada");
+        alert("Actividad registrada con éxito");
       } catch (e) {
         alert("Error: "+e.message);
       }
     }
 
-    // 4) Carga lista actividades
     async function loadActivitiesList() {
       try {
         const res = await fetch("actividades.txt");
@@ -163,7 +173,7 @@
               ? line.split("|",2)
               : [line,line];
           const opt = document.createElement("option");
-          opt.value = v.trim();
+          opt.value       = v.trim();
           opt.textContent = l.trim();
           activitySelect.appendChild(opt);
         });
@@ -172,8 +182,7 @@
       }
     }
 
-    // 5) Listeners
-    document.addEventListener("DOMContentLoaded",()=>{
+    document.addEventListener("DOMContentLoaded", () => {
       loadActivitiesList();
       updateActionButton();
     });
