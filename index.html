@@ -1,11 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"
-  />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>Actividad Diaria de RCII</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
@@ -48,157 +45,135 @@
   </div>
 
   <script>
-    // Referencias DOM
-    const userIdInput     = document.getElementById("userId");
-    const actionBtn       = document.getElementById("actionBtn");
-    const activitySelect  = document.getElementById("activitySelect");
-    const addActivityBtn  = document.getElementById("addActivityBtn");
+    const userIdInput    = document.getElementById("userId");
+    const actionBtn      = document.getElementById("actionBtn");
+    const activitySelect = document.getElementById("activitySelect");
+    const addActivityBtn = document.getElementById("addActivityBtn");
 
-    // Guarda la siguiente acción a enviar (Entrada o Salida)
     let nextAction = "Entrada";
-    // Guarda la última actividad real del usuario
-    let lastType = null;
+    let lastType   = null;
 
-    // 1) Consulta al backend para saber la última actividad y ajustar botones
+    // Ajusta estilos de actionBtn según acción
+    function styleActionBtn() {
+      // Siempre quitar ambas clases antes de aplicar
+      actionBtn.classList.remove("bg-blue-500","hover:bg-blue-600","bg-red-500","hover:bg-red-600");
+      if (nextAction === "Entrada") {
+        actionBtn.classList.add("bg-blue-500","hover:bg-blue-600");
+      } else {
+        actionBtn.classList.add("bg-red-500","hover:bg-red-600");
+      }
+      actionBtn.textContent = `Registrar ${nextAction}`;
+    }
+
+    // 1) Consulta la última actividad y habilita/deshabilita botones
     async function updateActionButton() {
       const user_id = userIdInput.value.trim();
       if (!user_id) {
         lastType = null;
-        actionBtn.textContent    = "Ingresa tu ID";
-        actionBtn.disabled       = true;
-        addActivityBtn.disabled  = true;
+        actionBtn.disabled      = true;
+        addActivityBtn.disabled = true;
+        actionBtn.textContent   = "Ingresa tu ID";
         return;
       }
 
       actionBtn.disabled    = true;
       actionBtn.textContent = "Cargando…";
-
       try {
         const res  = await fetch(`api.php?action=last&user_id=${encodeURIComponent(user_id)}`);
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || res.statusText);
+        if (!res.ok) throw new Error(data.error);
 
-        lastType = data.last;  // "Entrada", "Salida" o null
-
-        // Alterna acción Entrada/Salida
+        lastType = data.last; // "Entrada","Salida" o null
         nextAction = lastType === "Entrada" ? "Salida" : "Entrada";
-        actionBtn.textContent = `Registrar ${nextAction}`;
-        actionBtn.disabled    = false;
 
-        // Solo habilitar Registrar Actividad si la última fue ENTRADA
+        // Estilo y texto
+        styleActionBtn();
+        actionBtn.disabled = false;
+
+        // Desactivar registrar actividad hasta tras una Entrada
         addActivityBtn.disabled = (lastType !== "Entrada");
       } catch (e) {
-        console.error("Error al obtener última actividad:", e);
+        console.error(e);
         lastType = null;
-        actionBtn.textContent   = "Error al cargar";
         actionBtn.disabled      = true;
         addActivityBtn.disabled = true;
+        actionBtn.textContent   = "Error";
       }
     }
 
-    // 2) Función para enviar Entrada/Salida
+    // 2) Registrar Entrada/Salida
     async function logToggle() {
       const user_id = userIdInput.value.trim();
-      if (!user_id) {
-        return alert("Por favor, ingresa un ID de usuario.");
-      }
+      if (!user_id) return alert("Ingresa un ID de usuario.");
 
-      const payload = {
-        user_id,
-        activity_type:     nextAction,
-        trabajo_realizado: ""
-      };
-
+      const payload = { user_id, activity_type: nextAction, trabajo_realizado: "" };
       try {
-        const res  = await fetch("api.php?action=add", {
-          method:  "POST",
-          headers: { "Content-Type": "application/json" },
-          body:    JSON.stringify(payload)
+        const res = await fetch("api.php?action=add", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify(payload)
         });
         const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || res.statusText);
-        }
+        if (!res.ok) throw new Error(data.error);
         alert(`${nextAction} registrada con éxito`);
-        // Tras insertar, recalcula el estado
         updateActionButton();
       } catch (e) {
-        console.error("Fetch error:", e);
-        alert("Error al registrar la actividad:\n" + e.message);
+        alert("Error: " + e.message);
       }
     }
 
-    // 3) Función para registrar actividad personalizada
+    // 3) Registrar actividad personalizada
     async function logCustomActivity() {
       const user_id = userIdInput.value.trim();
       const trabajo = activitySelect.value;
-
-      if (!user_id) {
-        return alert("Por favor, ingresa un ID de usuario.");
-      }
-      // Ahora obligamos a que la última sea ENTRADA
+      if (!user_id) return alert("Ingresa un ID de usuario.");
       if (lastType !== "Entrada") {
         return alert(
           lastType === null
-            ? "Debes registrar primero una Entrada."
-            : "Solo puedes registrar actividades después de una Entrada, no tras una Salida."
+            ? "Primero registra una Entrada."
+            : "Solo después de una Entrada puedes registrar actividades."
         );
       }
-      if (!trabajo) {
-        return alert("Por favor, selecciona una actividad.");
-      }
+      if (!trabajo) return alert("Selecciona una actividad.");
 
-      const payload = {
-        user_id,
-        activity_type:     "Actividad",
-        trabajo_realizado: trabajo
-      };
-
+      const payload = { user_id, activity_type:"Actividad", trabajo_realizado:trabajo };
       try {
-        const res  = await fetch("api.php?action=add", {
-          method:  "POST",
-          headers: { "Content-Type": "application/json" },
-          body:    JSON.stringify(payload)
+        const res = await fetch("api.php?action=add", {
+          method:"POST",
+          headers:{"Content-Type":"application/json"},
+          body: JSON.stringify(payload)
         });
         const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || res.statusText);
-        }
-        alert("Actividad registrada con éxito");
+        if (!res.ok) throw new Error(data.error);
+        alert("Actividad registrada");
       } catch (e) {
-        console.error("Fetch error:", e);
-        alert("Error al registrar la actividad:\n" + e.message);
+        alert("Error: "+e.message);
       }
     }
 
-    // 4) Cargar opciones desde actividades.txt
+    // 4) Carga lista actividades
     async function loadActivitiesList() {
       try {
         const res = await fetch("actividades.txt");
         const txt = await res.text();
-        const lines = txt.split(/\r?\n/).filter((l) => l.trim());
-
-        for (let line of lines) {
-          let value, label;
-          if (line.includes("\t")) {
-            [value, label] = line.split("\t", 2);
-          } else if (line.includes("|")) {
-            [value, label] = line.split("|", 2);
-          } else {
-            value = label = line;
-          }
+        txt.split(/\r?\n/).filter(l=>l.trim()).forEach(line=>{
+          let [v,l] = line.includes("\t")
+            ? line.split("\t",2)
+            : line.includes("|")
+              ? line.split("|",2)
+              : [line,line];
           const opt = document.createElement("option");
-          opt.value       = value.trim();
-          opt.textContent = label.trim();
+          opt.value = v.trim();
+          opt.textContent = l.trim();
           activitySelect.appendChild(opt);
-        }
-      } catch (e) {
-        console.error("No pude cargar actividades.txt:", e);
+        });
+      } catch(e){
+        console.error(e);
       }
     }
 
-    // 5) Event listeners
-    document.addEventListener("DOMContentLoaded", () => {
+    // 5) Listeners
+    document.addEventListener("DOMContentLoaded",()=>{
       loadActivitiesList();
       updateActionButton();
     });
