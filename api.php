@@ -5,7 +5,6 @@
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
-
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit;
@@ -27,9 +26,6 @@ if ($mysqli->connect_error) {
     exit;
 }
 
-
-// … cabeceras, CORS, conexión …
-
 // 3.b) Obtener la última actividad de un usuario
 if (isset($_GET['action']) && $_GET['action'] === 'last' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $user_id = trim($_GET['user_id'] ?? '');
@@ -48,13 +44,9 @@ if (isset($_GET['action']) && $_GET['action'] === 'last' && $_SERVER['REQUEST_ME
     $stmt->bind_param('s', $user_id);
     $stmt->execute();
     $row = $stmt->get_result()->fetch_assoc();
-    echo json_encode([
-      'last' => $row['activity_type'] ?? null
-    ]);
+    echo json_encode(['last' => $row['activity_type'] ?? null]);
     exit;
 }
-
-
 
 // 4) Determinar acción
 $action = $_GET['action'] ?? '';
@@ -63,38 +55,29 @@ $action = $_GET['action'] ?? '';
 if ($action === 'get' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     $date = $_GET['date'] ?? '';
     if ($date) {
-        // Validar formato YYYY-MM-DD
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
             http_response_code(400);
             echo json_encode(['error' => 'Invalid date format. Use YYYY-MM-DD']);
             exit;
         }
         $stmt = $mysqli->prepare("
-            SELECT 
-                user_id,
-                activity_type,
-                trabajo_realizado,
-                DATE_FORMAT(timestamp, '%d/%m/%Y %H:%i:%s') AS formatted_timestamp
-            FROM activities
-            WHERE DATE(timestamp) = ?
-            ORDER BY timestamp DESC
+            SELECT user_id, activity_type, trabajo_realizado,
+                   DATE_FORMAT(timestamp, '%d/%m/%Y %H:%i:%s') AS formatted_timestamp
+              FROM activities
+             WHERE DATE(timestamp) = ?
+             ORDER BY timestamp DESC
         ");
         $stmt->bind_param('s', $date);
         $stmt->execute();
         $res = $stmt->get_result();
     } else {
-        // Sin filtro de fecha
         $res = $mysqli->query("
-            SELECT 
-                user_id,
-                activity_type,
-                trabajo_realizado,
-                DATE_FORMAT(timestamp, '%d/%m/%Y %H:%i:%s') AS formatted_timestamp
-            FROM activities
-            ORDER BY timestamp DESC
+            SELECT user_id, activity_type, trabajo_realizado,
+                   DATE_FORMAT(timestamp, '%d/%m/%Y %H:%i:%s') AS formatted_timestamp
+              FROM activities
+             ORDER BY timestamp DESC
         ");
     }
-
     $out = [];
     while ($row = $res->fetch_assoc()) {
         $out[] = $row;
@@ -123,15 +106,24 @@ if ($action === 'add' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     // 6.1) Última actividad de este usuario
     $stmt = $mysqli->prepare("
         SELECT activity_type
-        FROM activities
-        WHERE user_id = ?
-        ORDER BY timestamp DESC
-        LIMIT 1
+          FROM activities
+         WHERE user_id = ?
+         ORDER BY timestamp DESC
+         LIMIT 1
     ");
     $stmt->bind_param('s', $user_id);
     $stmt->execute();
     $last = $stmt->get_result()->fetch_assoc();
-    $lastType = $last['activity_type'] ?? '';
+    $lastType = $last['activity_type'] ?? null;
+
+    // 6.1b) Si no hay actividad previa, solo permitimos "Entrada"
+    if ($lastType === null && $activity_type !== 'Entrada') {
+        http_response_code(400);
+        echo json_encode([
+            'error' => 'Primero debes registrar una Entrada antes de cualquier otra actividad.'
+        ]);
+        exit;
+    }
 
     // 6.2) Prohibir dos Entradas o dos Salidas consecutivas
     if (
